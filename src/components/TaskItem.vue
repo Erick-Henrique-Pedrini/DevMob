@@ -1,5 +1,11 @@
 <template>
   <div class="task-item" :class="{ done: task.done }">
+    <img
+      v-if="task.img_url"
+      :src="task.img_url"
+      class="task-thumbnail"
+      alt="Imagem da tarefa"
+    />
     <label class="task-label">
       <input
         type="checkbox"

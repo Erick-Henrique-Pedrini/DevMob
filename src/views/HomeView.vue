@@ -66,8 +66,8 @@ function handleAdd(title) {
   store.addTask(title);
 }
 
-function handleUpdate(id, title) {
-  store.updateTaskTitle(id, title);
+function handleUpdate(id, title, imgAttachmentKey) {
+  store.updateTask(id, { title, imgAttachmentKey });
   editingTask.value = null;
 }
 
