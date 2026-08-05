@@ -18,31 +18,75 @@
       Cancelar
     </button>
 
-    <div v-if="editingTask" class="image-section">
-      <img
-        v-if="previewUrl || editingTask.img_url"
-        :src="previewUrl || editingTask.img_url"
-        class="image-preview"
-        alt="Imagem da tarefa"
-      />
-      <label class="image-label" :class="{ disabled: uploading }">
-        <span v-if="uploading" class="upload-status">Enviando...</span>
-        <span v-else>
-          {{
-            previewUrl || editingTask.img_url
-              ? 'Trocar imagem'
-              : 'Adicionar imagem'
-          }}
-        </span>
-        <input
-          type="file"
-          accept="image/jpeg,image/png"
-          class="image-input"
-          :disabled="uploading"
-          @change="handleImageChange"
-        />
-      </label>
-    </div>
+   <div class="image-section">
+  
+<!-- Preview da imagem já salva ou capturada -->
+  
+<img
+    
+v-if="previewUrl || editingTask?.img_url"
+    
+:src="previewUrl || editingTask?.img_url"
+    
+class="image-preview"
+    
+alt="Imagem da tarefa"
+  
+/>
+
+  
+<!-- Input com capture (padrão) -->
+  
+<label class="image-label" :class="{ disabled: uploading }">
+    
+<span v-if="uploading" class="upload-status">Enviando...</span>
+    
+<span v-else>Adicionar imagem</span>
+    
+<input
+      
+type="file"
+      
+accept="image/jpeg,image/png"
+      
+capture="environment"
+      
+class="image-input"
+      
+:disabled="uploading"
+      
+@change="handleImageChange"
+    
+/>
+  
+</label>
+
+  
+<!-- Alternativa com preview ao vivo -->
+  
+<button
+    
+type="button"
+    
+class="task-button-secondary"
+    
+@click="showCameraCapture = !showCameraCapture"
+  
+>
+    
+{{ showCameraCapture ? 'Fechar câmera' : 'Abrir preview ao vivo' }}
+  
+</button>
+
+  
+<CameraCapture
+    
+v-if="showCameraCapture"
+    
+@captured="handleCameraCapture"
+  
+/>
+</div>
   </form>
 </template>
 
@@ -67,6 +111,7 @@ watch(
   () => props.editingTask,
   (task) => {
     newTask.value = task ? task.title : '';
+     if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
       previewUrl.value = null;
     imgAttachmentKey.value = null;
   },
@@ -74,6 +119,7 @@ watch(
 async function handleImageChange(event) {
   const file = event.target.files[0];
   if (!file) return;
+    if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = URL.createObjectURL(file);
   uploading.value = true;
   try {
@@ -105,6 +151,7 @@ function handleSubmit() {
 }
 function handleCancel() {
   newTask.value = '';
+    if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = null;
   imgAttachmentKey.value = null;
   emit('cancel');
