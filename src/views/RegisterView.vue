@@ -1,17 +1,17 @@
 <template>
   <div class="auth-page">
-    <form class="auth-card" @submit.prevent="handleLogin">
+    <form class="auth-card" @submit.prevent="handleRegister">
       <div class="auth-icon">
         <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
           <path
             fill="currentColor"
-            d="M12 12c2.7 0 8 1.34 8 4v2H4v-2c0-2.66 5.3-4 8-4zm0-2a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"
+            d="M15 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-6.5 1c-2.7 0-5.5 1.34-5.5 4v2h10v-2c0-1.14.5-2.06 1.28-2.78A8.6 8.6 0 0 0 8.5 13zM15 14c-2.7 0-8 1.34-8 4v2h16v-2c0-2.66-5.3-4-8-4z"
           />
         </svg>
       </div>
 
-      <h1>Bem-vindo de volta</h1>
-      <p class="auth-subtitle">Entre para ver suas tarefas</p>
+      <h1>Criar conta</h1>
+      <p class="auth-subtitle">Leva menos de um minuto</p>
 
       <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
@@ -35,16 +35,30 @@
           type="password"
           placeholder="••••••••"
           required
-          autocomplete="current-password"
+          minlength="6"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div class="field">
+        <label for="confirmPassword">Confirmar senha</label>
+        <input
+          id="confirmPassword"
+          v-model="confirmPassword"
+          type="password"
+          placeholder="••••••••"
+          required
+          minlength="6"
+          autocomplete="new-password"
         />
       </div>
 
       <button type="submit" class="auth-submit" :disabled="loading">
-        {{ loading ? "Entrando..." : "Entrar" }}
+        {{ loading ? "Criando conta..." : "Criar conta" }}
       </button>
 
       <p class="switch-link">
-        Não tem conta? <router-link to="/register">Criar conta</router-link>
+        Já tem conta? <router-link to="/login">Entrar</router-link>
       </p>
     </form>
   </div>
@@ -53,6 +67,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import authApi from "../api/authApi.js";
 import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
@@ -60,18 +75,26 @@ const authStore = useAuthStore();
 
 const email = ref("");
 const password = ref("");
+const confirmPassword = ref("");
 const loading = ref(false);
 const errorMessage = ref("");
 
-async function handleLogin() {
-  loading.value = true;
+async function handleRegister() {
   errorMessage.value = "";
+
+  if (password.value !== confirmPassword.value) {
+    errorMessage.value = "As senhas não coincidem.";
+    return;
+  }
+
+  loading.value = true;
   try {
+    await authApi.register(email.value, password.value);
     await authStore.login(email.value, password.value);
     router.push("/");
   } catch (err) {
     errorMessage.value =
-      err.response?.data?.detail ?? "Erro ao entrar. Verifique suas credenciais.";
+      err.response?.data?.detail ?? "Erro ao criar conta. Tente novamente.";
   } finally {
     loading.value = false;
   }
