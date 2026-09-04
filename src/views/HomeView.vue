@@ -12,12 +12,17 @@
     <p v-if="store.loading" class="loading-message">Carregando tarefas...</p>
 
     <template v-else>
-      <section v-if="store.pendingTasks.length > 0">
+      <label class="location-filter">
+        <input type="checkbox" v-model="locationOnly" />
+        Somente com localização
+      </label>
+
+      <section v-if="filteredPending.length > 0">
         <h2 class="section-title">
-          Pendentes ({{ store.pendingTasks.length }})
+          Pendentes ({{ filteredPending.length }})
         </h2>
         <TaskItem
-          v-for="task in store.pendingTasks"
+          v-for="task in filteredPending"
           :key="task.id"
           :task="task"
           @toggle="handleToggle"
@@ -26,12 +31,12 @@
         />
       </section>
 
-      <section v-if="store.completedTasks.length > 0">
+      <section v-if="filteredCompleted.length > 0">
         <h2 class="section-title">
-          Concluídas ({{ store.completedTasks.length }})
+          Concluídas ({{ filteredCompleted.length }})
         </h2>
         <TaskItem
-          v-for="task in store.completedTasks"
+          v-for="task in filteredCompleted"
           :key="task.id"
           :task="task"
           @toggle="handleToggle"
@@ -50,24 +55,36 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import TaskForm from '../components/TaskForm.vue';
 import TaskItem from '../components/TaskItem.vue';
 import { useTasksStore } from '../stores/tasks.js';
 
 const store = useTasksStore();
 const editingTask = ref(null);
+const locationOnly = ref(false);
+
+const filteredPending = computed(() =>
+  locationOnly.value
+    ? store.pendingTasks.filter((t) => t.latitude != null)
+    : store.pendingTasks,
+);
+const filteredCompleted = computed(() =>
+  locationOnly.value
+    ? store.completedTasks.filter((t) => t.latitude != null)
+    : store.completedTasks,
+);
 
 onMounted(() => {
   store.fetchTasks();
 });
 
-function handleAdd(title) {
-  store.addTask(title);
+function handleAdd(title, imgAttachmentKey, location) {
+  store.addTask(title, { imgAttachmentKey, location });
 }
 
-function handleUpdate(id, title, imgAttachmentKey) {
-  store.updateTask(id, { title, imgAttachmentKey });
+function handleUpdate(id, title, imgAttachmentKey, location) {
+  store.updateTask(id, { title, imgAttachmentKey, location });
   editingTask.value = null;
 }
 
@@ -90,6 +107,15 @@ function handleRemove(id) {
 </script>
 
 <style scoped>
+.location-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 8px;
+}
+
 .section-title {
   font-size: 1rem;
   color: #666;
